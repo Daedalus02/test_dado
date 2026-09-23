@@ -67,9 +67,8 @@ async function openTurso(url: string, authToken: string): Promise<Db> {
   };
 }
 
-async function openSqlite(): Promise<Db> {
+async function openSqlite(file: string): Promise<Db> {
   const { default: Database } = await import('better-sqlite3');
-  const file = path.resolve(process.env.SQLITE_PATH ?? path.join('data', 'video-tracker.db'));
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const sqlite = new Database(file);
   sqlite.pragma('journal_mode = WAL');
@@ -89,10 +88,35 @@ async function openSqlite(): Promise<Db> {
 // Cache su globalThis: sopravvive all'hot reload di `next dev`.
 const globalForDb = globalThis as unknown as { __videoTrackerDb?: Promise<Db> };
 
+/**
+ * Sceglie il driver prima di qualsiasi accesso al filesystem: con Turso il disco non viene
+ * mai toccato. Su Vercel (filesystem read-only) SQLite non è un'opzione: meglio fallire
+ * subito con un messaggio chiaro che con un ENOENT su mkdir.
+ */
+function openDb(): Promise<Db> {
+  const tursoUrl = process.env.TURSO_DATABASE_URL?.trim();
+  const tursoToken = process.env.TURSO_AUTH_TOKEN?.trim();
+  if (tursoUrl && tursoToken) {
+    console.log('[db] using Turso remote');
+    return openTurso(tursoUrl, tursoToken);
+  }
+  if (process.env.VERCEL === '1') {
+    const missing = [!tursoUrl && 'TURSO_DATABASE_URL', !tursoToken && 'TURSO_AUTH_TOKEN'].filter(Boolean);
+    return Promise.reject(
+      new Error(
+        `TURSO_DATABASE_URL and TURSO_AUTH_TOKEN required in production (missing: ${missing.join(', ')}). ` +
+          'Set them in Vercel → Settings → Environment Variables for this environment and redeploy.',
+      ),
+    );
+  }
+  const file = path.resolve(process.env.SQLITE_PATH ?? path.join('data', 'video-tracker.db'));
+  console.log(`[db] using local SQLite at ${file}`);
+  return openSqlite(file);
+}
+
 export function getDb(): Promise<Db> {
   if (!globalForDb.__videoTrackerDb) {
-    const { TURSO_DATABASE_URL: tursoUrl, TURSO_AUTH_TOKEN: tursoToken } = process.env;
-    const opening = tursoUrl && tursoToken ? openTurso(tursoUrl, tursoToken) : openSqlite();
+    const opening = openDb();
     // Se l'apertura fallisce, il prossimo tentativo riparte da zero.
     opening.catch(() => {
       globalForDb.__videoTrackerDb = undefined;
