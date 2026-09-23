@@ -32,7 +32,7 @@ schema incluso.
 | `ADMIN_USER`, `ADMIN_PASS` | Credenziali Basic Auth di `/admin`. Se mancano, `/admin` risponde 503 |
 | `CONSENT_BANNER` | `eu` (default), `always`, `off` — vedi [Privacy](#privacy-e-consenso) |
 | `SQLITE_PATH` | Percorso del file SQLite locale |
-| `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` | Se `TURSO_DATABASE_URL` è impostato si usa Turso al posto di SQLite |
+| `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` | Solo per produzione: se sono impostate entrambe si usa Turso al posto di SQLite |
 | `VIDEO_SRC_<ID>` | Sovrascrive la sorgente di un video (vedi sotto) |
 
 ## Aggiungere un video
@@ -121,7 +121,7 @@ evento, punto massimo.
   davvero non collegabili a dati personali, valuta di non salvare `hit_id` oppure di salvare in `hits` un hash
   dell'IP invece dell'IP in chiaro. Verifica la base giuridica con chi si occupa di privacy.
 
-## Deploy su Vercel con Turso
+## Deploy su Vercel
 
 1. Crea il database Turso:
    ```bash
@@ -130,10 +130,12 @@ evento, punto massimo.
    turso db tokens create video-tracker   # -> TURSO_AUTH_TOKEN
    ```
    Le tabelle vengono create automaticamente alla prima richiesta.
-2. Importa il repository su Vercel (framework: Next.js, nessuna configurazione di build speciale).
+2. Pubblica il codice su GitHub e su Vercel crea un progetto con *Add New → Project → Import Git Repository*
+   (framework: Next.js, nessuna configurazione di build speciale).
 3. In *Settings → Environment Variables* imposta: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `ADMIN_USER`,
    `ADMIN_PASS`, `BASE_URL` (es. `https://video.tuodominio.it`), opzionalmente `CONSENT_BANNER` e `VIDEO_SRC_*`.
-4. Deploy. Su Vercel il file system è di sola lettura: **senza Turso le scritture falliscono**.
+4. Deploy (ogni push sul branch principale rideploya). Su Vercel il file system è di sola lettura:
+   **senza Turso le scritture falliscono**.
 5. Rigenera i QR con `BASE_URL` di produzione.
 
 Note:

@@ -45,10 +45,10 @@ const SCHEMA: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_sessions_video_started ON sessions (video_id, started_at)`,
 ];
 
-async function openTurso(url: string): Promise<Db> {
+async function openTurso(url: string, authToken: string): Promise<Db> {
   // Client HTTP: niente binding nativi, adatto a Vercel.
   const { createClient } = await import('@libsql/client/web');
-  const client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  const client = createClient({ url, authToken });
   await client.batch(SCHEMA, 'write');
   return {
     async all<T>(sql: string, args: SqlValue[] = []) {
@@ -91,8 +91,8 @@ const globalForDb = globalThis as unknown as { __videoTrackerDb?: Promise<Db> };
 
 export function getDb(): Promise<Db> {
   if (!globalForDb.__videoTrackerDb) {
-    const tursoUrl = process.env.TURSO_DATABASE_URL;
-    const opening = tursoUrl ? openTurso(tursoUrl) : openSqlite();
+    const { TURSO_DATABASE_URL: tursoUrl, TURSO_AUTH_TOKEN: tursoToken } = process.env;
+    const opening = tursoUrl && tursoToken ? openTurso(tursoUrl, tursoToken) : openSqlite();
     // Se l'apertura fallisce, il prossimo tentativo riparte da zero.
     opening.catch(() => {
       globalForDb.__videoTrackerDb = undefined;
