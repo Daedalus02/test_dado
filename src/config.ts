@@ -10,6 +10,7 @@ export interface VideoConfig {
  */
 export const videos: Record<string, VideoConfig> = {
   sample: { title: 'Video di prova', src: '/sample.mp4' },
+  dado: { title: 'Dado', src: '/dado.mp4' },
 };
 
 export const VIDEO_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
