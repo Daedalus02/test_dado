@@ -31,7 +31,7 @@ export default async function VideoPage({ params, searchParams }: Props) {
 
   return (
     <main className="video-page">
-      <TrackedVideo videoId={params.id} src={video.src} hitId={hitId} requireConsent={showBanner} />
+      <TrackedVideo videoId={params.id} source={video} hitId={hitId} requireConsent={showBanner} />
       {showBanner && <ConsentBanner />}
     </main>
   );

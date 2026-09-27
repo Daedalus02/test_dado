@@ -41,8 +41,8 @@ Aggiungi una voce in `src/config.ts`:
 
 ```ts
 export const videos: Record<string, VideoConfig> = {
-  sample: { title: 'Video di prova', src: '/sample.mp4' },
-  promo2026: { title: 'Promo 2026', src: 'https://cdn.example.com/promo-2026.mp4' },
+  sample: { title: 'Video di prova', type: 'html5', src: '/sample.mp4' },
+  promo2026: { title: 'Promo 2026', type: 'html5', src: 'https://cdn.example.com/promo-2026.mp4' },
 };
 ```
 
@@ -52,6 +52,30 @@ export const videos: Record<string, VideoConfig> = {
   non alfanumerici → `_`), es. `VIDEO_SRC_PROMO2026=https://…`. Basta la sola env var anche per un id non
   presente in `config.ts`.
 - Id sconosciuti rispondono 404 e **non** vengono registrati.
+- L'override `VIDEO_SRC_<ID>` produce sempre un video HTML5, anche se la voce in `config.ts` è YouTube.
+
+## Aggiungere un video YouTube
+
+1. Carica il video su YouTube e in *Visibilità* scegli **Non in elenco** (unlisted): non compare nelle
+   ricerche né sul canale, ma chi ha il link (o la pagina `/v/<id>`) può vederlo. Verifica che in
+   *Dettagli → Mostra altro* sia attivo **Consenti incorporamento**, altrimenti il player mostra un errore.
+2. Prendi l'ID dal link: `https://youtu.be/Oo1fQ7Oo12Q` o `https://www.youtube.com/watch?v=Oo1fQ7Oo12Q`
+   → `Oo1fQ7Oo12Q` (11 caratteri).
+3. Aggiungi o aggiorna la voce in `src/config.ts`:
+
+   ```ts
+   dado: { title: 'Dado', type: 'youtube', youtubeId: 'Oo1fQ7Oo12Q', duration: 10 },
+   ```
+
+   `duration` (secondi) è solo un fallback: la durata reale viene letta dal player (`getDuration()`) e
+   `duration` si usa se il player riporta 0.
+
+Il player è la [IFrame Player API](https://developers.google.com/youtube/iframe_api_reference) di YouTube.
+Il tracking è lo stesso dei video HTML5 (stessi endpoint, payload, sessione e consenso): la posizione viene
+campionata ogni 500 ms durante la riproduzione; un salto all'indietro o di almeno 2s tra due campioni viene
+registrato come `seeking`/`seeked` e non conta come visione.
+Nota privacy: l'embed carica script e cookie di YouTube indipendentemente dal banner di consenso di questo
+sito (valuta `youtube-nocookie.com` o di mostrare il player solo dopo il consenso).
 
 ## Generare un QR code
 
