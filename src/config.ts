@@ -13,7 +13,7 @@ export type VideoConfig = VideoSource & { title: string };
  */
 export const videos: Record<string, VideoConfig> = {
   sample: { title: 'Video di prova', type: 'html5', src: '/sample.mp4' },
-  dado: { title: 'Dado', type: 'youtube', youtubeId: 'Oo1fQ7Oo12Q', duration: 10 },
+  dado: { title: 'Dado', type: 'youtube', youtubeId: 'Cwgd49Y-loM', duration: 551 },
 };
 
 export const VIDEO_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;

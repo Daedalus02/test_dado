@@ -64,7 +64,7 @@ export const videos: Record<string, VideoConfig> = {
 3. Aggiungi o aggiorna la voce in `src/config.ts`:
 
    ```ts
-   dado: { title: 'Dado', type: 'youtube', youtubeId: 'Oo1fQ7Oo12Q', duration: 10 },
+   dado: { title: 'Dado', type: 'youtube', youtubeId: 'Cwgd49Y-loM', duration: 551 },
    ```
 
    `duration` (secondi) è solo un fallback: la durata reale viene letta dal player (`getDuration()`) e
